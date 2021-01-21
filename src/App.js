@@ -4,153 +4,105 @@ import React, { useState } from 'react';
 import Cabecera from './Cabecera/Cabecera';
 import {v4} from 'uuid'
 import DetallePersona from './DetallePersona/DetallePersona'
+/*import SQLite from 'react-native-sqlite-storage'
+global.db=SQLite.openDatabase({
+  name:'dbprueba',
+  location:'default',
+
+},
+()=>{},error=>{console.log("Error "+error)})*/
 function App(){
   const [persona,actPersona] = useState({
-    nombre:'',
-    edad:'',
-    carrera:'',
-    id:v4() //al momento de crear la estructura se le asigna el id
-  })
-  const [hayError,actError] = useState(false)
-
-  const [personas,insertarPersona] = useState([]);
-  
-  const actualizar= e =>{
-    actPersona({
-      ...persona,
-      [e.target.name]:e.target.value,
-      id:v4()
-    })
-  }
-  const cambiaPersonas = (id) =>{
-    const personaArray = personas.filter(persona => persona.id !== id);
-    insertarPersona(
-      personaArray
-    )
-  }
-  const guardar = e => {
-    e.preventDefault();
-    
-    if(persona.nombre.trim==='' || persona.edad==='' || persona.carrera.trim==='')
-      {
-      actError(true);
-      return;
+    "id": '',
+    "name": "",
+    "username": "",
+    "email": "",
+    "address": {
+      "street": "",
+      "suite": "",
+      "city": "",
+      "zipcode": "",
+      "geo": {
+        "lat": "",
+        "lng": ""
       }
-    actError(false);
-
-    insertarPersona([
-      ...personas,
-      persona
-    ]);
-/*    actPersona({
-      ...persona,
-      id: v4()
-    })*/
-
-  }
-  return (
-    <div>
-    <form onSubmit={guardar}>
-      <label htmlFor="nombre">Nombre Completo</label>
-      <input type="text" id="nombre" name="nombre" onChange={actualizar}></input>
-      <br />
-      <label htmlFor="edad">Edad</label>
-      <input type="number" id="edad" name="edad" onChange={actualizar}></input>
-      <br />
-      <label htmlFor="carrera">Carrera</label>
-      <input type="text" id="carrera" name="carrera" onChange={actualizar}></input>
-      <br />
-      <button type="submit" >Guardar</button>
-    </form>
-    <h2>
-      Lista de Personas
-    </h2>
-      <DetallePersona 
-        persona={personas}
-        onNameChange={cambiaPersonas}
-      />      
-    </div>
-  )
-}
-
-/*function App(props) {
-  const [persona,actPersona]=React.useState({
-    edad:0,
-    nombre:'',    
+    },
+    "phone": "",
+    "website": "",
+    "company": {
+      "name": "",
+      "catchPhrase": "",
+      "bs": ""
+    }
   })
-//  const [edad,setEdad]=React.useState(30)
-//  const [nombre,setNombre]=React.useState(props.nombre);
-  let mensaje='';
-/*  const cambiarEdad = (edad,nombre) => {
-    setEdad(edad)
-    setNombre(nombre)} 
-  const cambiaValor = e =>{
-    //alert(e.target.name)
+  const [personas,actPersonas]=useState([])
+  const [hayPersonas,actswitch]=useState(false)
+  const recuperaDatos = () =>{
+    fetch('https://jsonplaceholder.typicode.com/users')
+      .then(respuesta => respuesta.json())
+        .then(res => 
+            {
+            res.map(r=>{
+              personas.push(r)
+            })
+            actswitch(true)
+            }
+          )
+    }
+  const actualiza = e =>{
     actPersona({
       ...persona,
       [e.target.name]:e.target.value
     })
-    console.log(serialize(formulario))
   }
-  const [errorEnvio,activaError]= React.useState(false)
-
-  const enviarDatos = e =>{
-    e.preventDefault();
-    if(persona.nombre.trim()==='' || persona.edad==0 || persona.edad<0 || persona.edad>120 )
+  const eliminaPersona = id =>{
+    fetch('https://jsonplaceholder.typicode.com/users/'+id,{
+      method: 'DELETE',
+    }).then(res=>
+      console.log(res))
+  }
+  const guardaPersona=e=>{
+    e.preventDefault()
+    fetch('https://jsonplaceholder.typicode.com/users', {
+      method: 'POST',
+      body: JSON.stringify(persona),
+      headers: {
+        'Content-type': 'application/json; charset=UTF-8',
+      },
+    })
+    .then((response) => response.json())
+    .then((json) => 
     {
-      activaError(true);
-      return;
+      localStorage.setItem('personaGuardada',JSON.stringify(json))
+      console.log(localStorage.getItem('personaGuardada'))
     }
-    activaError(false);
-    alert('Enviado Correctamente');
+    )
   }
-  if(persona.edad>=18){
-    mensaje=<h1>Es mayor de edad</h1>
-  }
-  else
-    mensaje=<h1>Es menor de edad</h1>
-
-  const ejecuta = e =>{
-    console.log(serialize(formulario))
-  }
-
-  const formulario=(
-    <form>
-    <header className="App-header">
-      <img src={logo} className="App-logo" alt="logo" />
-      <p>
-        {mensaje} {persona.nombre} Edad: {persona.edad}
-      </p>
-      {errorEnvio ? <p>Los campos son obligatorios</p> : null }        
-      <a
-        className="App-link"
-        href="https://reactjs.org"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Learn React
-      </a>
-      <label>Nombre</label>
-      <input type="text" name="nombre" onChange={cambiaValor}>
-      </input>
-      <label>Edad</label>
-      <input type="number" name="edad" onChange={cambiaValor}>
-      </input>
-      <button type="button" onClick={ejecuta} id="boton" >
-        Guardar
-      </button>
-    </header>
-    </form>
-  )
   return (
-    <div className="App">
-      <Cabecera 
-        nombre={persona.nombre}
-        edad={persona.edad}
-      />
-      { formulario }
+    <div>
+      <form onSubmit={guardaPersona}>
+        <label htmlFor="name">Nombre</label>
+        <input type="text" name="name" id="name" onChange={actualiza}></input><br/>
+        <label htmlFor="email">Correo Electronico</label>
+        <input type="text" name="email" id="email" onChange={actualiza}></input><br/>
+        <button type="submit">Guardar</button>
+      </form>
+      <button type="button" onClick={recuperaDatos}>Recuperar</button>
+      <ul>
+      {
+      personas.map(p => (
+        <li key={p.id}>
+          <ul>
+            <li>Nombre: {p.name}</li>
+            <li>Correo Electrónico: {p.email}</li>
+            <li>Empresa: {p.company.name}</li>
+            <li><button type="button" onClick={() => eliminaPersona(p.id)}>Eliminar</button></li>
+          </ul>
+        </li>
+      ))
+    }
+    </ul>
     </div>
-  );
-}*/
-
+  )
+}
 export default App;
